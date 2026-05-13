@@ -116,12 +116,13 @@ async def set_commands(bot: Bot):
     return success  # True on success
 
 
-BASE_URL = "https://your-project-name.leapcell.app"   # ←←← CHANGE THIS
+BASE_URL = "https://your-project-name.leapcell.app"  # ←←← CHANGE THIS
 WEBHOOK_PATH = f"/webhook/{TOKEN}"
 WEBHOOK_URL = f"{BASE_URL}{WEBHOOK_PATH}"
 
 
 bot = Bot(token=TOKEN, parse_mode="HTML")
+
 
 # ======================== LIFESPAN ========================
 @asynccontextmanager
@@ -129,11 +130,12 @@ async def lifespan(app: FastAPI):
     # Startup
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.set_webhook(WEBHOOK_URL)
-    
+
     yield
-    
+
     # Shutdown
     await bot.delete_webhook()
+
 
 # ======================== FASTAPI APP ========================
 app = FastAPI(lifespan=lifespan)
@@ -153,7 +155,8 @@ async def webhook(request: Request):
 @app.get("/")
 async def index():
     return {"message": "Aiogram bot is running on Leapcell with FastAPI!"}
-    
+
+
 # Run the bot
 async def main() -> None:
     try:
@@ -168,10 +171,8 @@ async def main() -> None:
         # await Root.start_polling(bot)
 
         await create_tables()
-        
+
         await set_commands(bot)
-
-
 
     except Exception as e:
         if e is KeyboardInterrupt:
