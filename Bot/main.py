@@ -1,67 +1,30 @@
-import asyncio
-import logging
 import os
 
-import logging
-import asyncio
-import threading
 
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
-from aiogram.filters import Command
 
-import flask, json
-from flask import request, Flask
-from aiohttp import web
-from aiogram import Bot, Dispatcher, Router
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
-from aiogram.types import Message
-from aiogram.utils.markdown import hbold
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiogram import Router
 
 
-from aiogram.client.session.aiohttp import AiohttpSession
-
-from aiogram import Bot, Dispatcher, F, Router, loggers, types
-from aiogram.filters import (
-    IS_MEMBER,
-    IS_NOT_MEMBER,
-    ChatMemberUpdatedFilter,
-)
+from aiogram import F, loggers, types
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder,
-    ReplyKeyboardBuilder,
-    KeyboardBuilder,
 )
 
-from aiogram.methods import send_message
-
-from aiogram.filters import Command
-
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
-
-from aiogram.fsm.state import StatesGroup, State
 
 from contextlib import asynccontextmanager
-import os
 import sys
 
 from fastapi import FastAPI, Request
-from aiogram import Bot, Dispatcher
-from aiogram.types import Update
-from aiogram.filters import CommandStart
-from aiogram import Router
-from aiogram.types import Message
 from aiogram.exceptions import TelegramRetryAfter
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 ### Local Module
 # from Bot.config import TOKEN, generate_keyboard
-from Bot.Handlers.Keyboards import keyboard_router
+# from Bot.Handlers.Keyboards import keyboard_router
 from Bot.Handlers.Global_Commands import globalcommand_router
 
 # from DataBase.database import globalcommand_router
@@ -87,7 +50,7 @@ Root = Dispatcher()
 router = Router()
 Root.include_router(router)
 Root.include_router(globalcommand_router)
-Root.include_router(keyboard_router)
+# Root.include_router(keyboard_router)
 
 
 ### makeing the inline base menus
