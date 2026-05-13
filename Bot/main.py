@@ -18,7 +18,7 @@ from Handlers.Global_Commands import globalcommand_router
 
 
 # ========================= CONFIG =========================
-BASE_URL = "https://your-project-name.leapcell.app"   # ←←← CHANGE TO YOUR LEAPCELL URL
+BASE_URL = "https://mohamadmeymandi.leapcell.app"   # ←←← CHANGE TO YOUR LEAPCELL URL
 WEBHOOK_PATH = f"/webhook/{TOKEN}"
 WEBHOOK_URL = f"{BASE_URL}{WEBHOOK_PATH}"
 
