@@ -12,7 +12,7 @@ from aiogram.types import Update
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 # Local modules
-from .config import TOKEN
+from Bot.config import TOKEN
 # from Handlers.Keyboards import keyboard_router
 # from Handlers.Global_Commands import globalcommand_router
 # from Database.database import create_tables
