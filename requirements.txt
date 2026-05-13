@@ -63,3 +63,8 @@ typing-inspection==0.4.2
     # via pydantic
 yarl==1.22.0
     # via aiohttp
+    
+uvicorn[standard]
+python-dotenv
+aiofiles
+fastapi
