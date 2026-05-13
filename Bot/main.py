@@ -32,7 +32,8 @@ from Bot.Database.database import create_tables
 # CONFIG
 # =========================
 
-TOKEN = os.getenv("TOKEN")
+# TOKEN = os.getenv("TOKEN")
+TOKEN = "7058704613:AAEuFunpv6m3jogUOXFR-0rEBrYmuQkxQh0"
 WEBHOOK_SECRET = "02i39u8hg82ybo"
 
 WEBHOOK_PATH = f"/webhook/{TOKEN}"
