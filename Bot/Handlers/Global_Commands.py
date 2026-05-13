@@ -3,8 +3,9 @@ from aiogram import types
 from aiogram.filters import Command
 
 ### Local Module
-from Handlers.Keyboards import menu_keyboard
-from Database.database import add_user, search_user
+
+from .Keyboards import menu_keyboard
+from ..Database.database import add_user, search_user
 
 globalcommand_router = Router()
 
