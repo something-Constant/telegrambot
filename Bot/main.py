@@ -72,6 +72,7 @@ from Bot.Database.database import create_tables
 # =========================
 
 TOKEN = os.getenv("TOKEN")
+WEBHOOK_SECRET = "02i39u8hg82ybo"
 
 WEBHOOK_PATH = f"/webhook/{TOKEN}"
 WEBHOOK_URL = f"https://mohamadmeymandi.leapcell.app{WEBHOOK_PATH}"
@@ -146,15 +147,15 @@ async def set_commands(bot: Bot):
 async def lifespan(app: FastAPI):
     print("Starting bot...")
 
-    await create_tables()
-    await set_commands(bot)
-
     try:
+        await create_tables()
+        await set_commands(bot)
+
         webhook_info = await bot.get_webhook_info()
 
         # avoid flood control
         if webhook_info.url != WEBHOOK_URL:
-            await bot.set_webhook(WEBHOOK_URL)
+            await bot.set_webhook(url=WEBHOOK_URL, secret_token=WEBHOOK_SECRET)
             print(f"Webhook set: {WEBHOOK_URL}")
         else:
             print("Webhook already set.")
@@ -165,7 +166,7 @@ async def lifespan(app: FastAPI):
     yield
 
     print("Shutting down bot...")
-    await bot.delete_webhook(drop_pending_updates=False)
+    await bot.delete_webhook(drop_pending_updates=True)
     await bot.session.close()
 
 
