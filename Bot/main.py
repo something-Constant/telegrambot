@@ -2,6 +2,25 @@ import asyncio
 import logging
 import os
 
+
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request
+from aiogram import Bot, Dispatcher
+from aiogram.types import Update
+from aiogram.filters import Command
+
+import flask, json
+from flask import request, Flask
+from aiohttp import web
+from aiogram import Bot, Dispatcher, Router
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.filters import CommandStart
+from aiogram.types import Message
+from aiogram.utils.markdown import hbold
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+
+
 from aiogram.client.session.aiohttp import AiohttpSession
 
 from aiogram import Bot, Dispatcher, F, Router, loggers, types
@@ -37,6 +56,8 @@ from Database.database import create_tables
 
 
 # import Handlers.admin
+
+app = Flask(__name__)
 
 
 ### routing
@@ -95,20 +116,62 @@ async def set_commands(bot: Bot):
     return success  # True on success
 
 
+BASE_URL = "https://your-project-name.leapcell.app"   # ←←← CHANGE THIS
+WEBHOOK_PATH = f"/webhook/{TOKEN}"
+WEBHOOK_URL = f"{BASE_URL}{WEBHOOK_PATH}"
+
+
+bot = Bot(token=TOKEN, parse_mode="HTML")
+
+# ======================== LIFESPAN ========================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await bot.delete_webhook(drop_pending_updates=True)
+    await bot.set_webhook(WEBHOOK_URL)
+    
+    yield
+    
+    # Shutdown
+    await bot.delete_webhook()
+
+# ======================== FASTAPI APP ========================
+app = FastAPI(lifespan=lifespan)
+
+
+@app.post(WEBHOOK_PATH)
+async def webhook(request: Request):
+    try:
+        data = await request.json()
+        update = Update.model_validate(data, context={"bot": bot})
+        await Root.feed_update(bot, update)
+        return {"status": "ok"}
+    except Exception as e:
+        return {"status": "error"}
+
+
+@app.get("/")
+async def index():
+    return {"message": "Aiogram bot is running on Leapcell with FastAPI!"}
+    
 # Run the bot
 async def main() -> None:
     try:
-        session = AiohttpSession(proxy="http://127.0.0.1:23010")
-        await create_tables()
+        # session = AiohttpSession(proxy="http://127.0.0.1:23010")
+        # await create_tables()
 
-        bot = Bot(token=TOKEN, session=session)
-        logging.basicConfig(level=logging.INFO)
+        # bot = Bot(token=TOKEN, session=session, parse_mode="HTML")
+        # logging.basicConfig(level=logging.INFO)
+        # await set_commands(bot)
+
+        # print("Bot is running...")
+        # await Root.start_polling(bot)
+
+        await create_tables()
+        
         await set_commands(bot)
 
 
-        
-        print("Bot is running...")
-        await Root.start_polling(bot)
 
     except Exception as e:
         if e is KeyboardInterrupt:
