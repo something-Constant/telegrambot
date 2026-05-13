@@ -5,11 +5,26 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
 
-# Create async engine
+from pathlib import Path
+
+
+
+# Get the current script's directory
+current_dir = Path(__file__).parent
+
+# Build database path
+db_path = current_dir / "DataBase.sqlite3"
+
 engine = create_async_engine(
-    "sqlite+aiosqlite:///F:/Documents/VsCode/Telegram/Bot/database/DataBase.sqlite3",
+    f"sqlite+aiosqlite:///{db_path}",
     echo=False,
 )
+
+# Create async engine
+# engine = create_async_engine(
+#     "sqlite+aiosqlite:///F:/Documents/VsCode/Telegram/Bot/database/DataBase.sqlite3",
+#     echo=False,
+# )
 
 # Create async session factory
 Session = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
