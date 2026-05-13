@@ -1,148 +1,120 @@
-import logging
-
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Response
-
-from aiogram import Bot, Dispatcher, Router, F, loggers, types
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from aiogram.fsm.context import FSMContext
+from fastapi import FastAPI, Request
+from aiogram import Bot, Dispatcher
 from aiogram.types import Update
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.filters import CommandStart
+from aiogram import Router
+from aiogram.types import Message
+from aiogram.exceptions import TelegramRetryAfter
 
-# Local modules
-from Bot.config import TOKEN
-# from Handlers.Keyboards import keyboard_router
-# from Handlers.Global_Commands import globalcommand_router
-# from Database.database import create_tables
+# =========================
+# CONFIG
+# =========================
+
+TOKEN = "7058704613:AAEuFunpv6m3jogUOXFR-0rEBrYmuQkxQh0"
 
 
-logging.basicConfig(level=logging.INFO)
-
-BASE_URL = "https://mohamadmeymandi.leapcell.app"
 WEBHOOK_PATH = f"/webhook/{TOKEN}"
-WEBHOOK_URL = f"{BASE_URL}{WEBHOOK_PATH}"
+WEBHOOK_URL = f"https://mohamadmeymandi.leapcell.app{WEBHOOK_PATH}"
 
+HOST = "0.0.0.0"
+PORT = 8080
 
-# Bot
-bot = Bot(
-    token=TOKEN,
-    default=DefaultBotProperties(
-        parse_mode=ParseMode.HTML
-    )
-)
+# =========================
+# BOT
+# =========================
 
-# Dispatcher
+bot = Bot(token=TOKEN)
 dp = Dispatcher()
 router = Router()
 
-# dp.include_router(router)
-# dp.include_router(globalcommand_router)
-# dp.include_router(keyboard_router)
+
+# =========================
+# HANDLERS
+# =========================
+
+@router.message(CommandStart())
+async def start_handler(message: Message):
+    await message.answer("Bot is running 🚀")
 
 
-# FastAPI lifespan
+dp.include_router(router)
+
+
+# =========================
+# FASTAPI LIFESPAN
+# =========================
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
     print("Starting bot...")
 
-    # await create_tables()
+    try:
+        webhook_info = await bot.get_webhook_info()
 
-    # Remove old webhook updates
-    await bot.delete_webhook(
-        drop_pending_updates=True
-    )
+        # avoid flood control
+        if webhook_info.url != WEBHOOK_URL:
+            await bot.set_webhook(WEBHOOK_URL)
+            print(f"Webhook set: {WEBHOOK_URL}")
+        else:
+            print("Webhook already set.")
 
-    # Set new webhook
-    await bot.set_webhook(WEBHOOK_URL)
-
-    print(f"Webhook set: {WEBHOOK_URL}")
+    except TelegramRetryAfter as e:
+        print(f"Retry after: {e.retry_after}")
 
     yield
 
-    print("Stopping bot...")
-
-    await bot.delete_webhook()
-
+    print("Shutting down bot...")
+    await bot.delete_webhook(drop_pending_updates=False)
     await bot.session.close()
 
-    print("Bot stopped")
 
+# =========================
+# FASTAPI APP
+# =========================
 
-# FastAPI app
 app = FastAPI(lifespan=lifespan)
 
 
-# Inline keyboard
-inline_builder = InlineKeyboardBuilder()
-
-inline_keys = {
-    "⬅ Back": "Back",
-    "▶ Start": "Start",
-    "❌ Cancel": "Cancel",
-}
-
-for text, callback in inline_keys.items():
-    inline_builder.button(
-        text=text,
-        callback_data=callback
-    )
-
-inline_builder.adjust(2, 1)
-
-inline_keyboard = inline_builder.as_markup()
+# healthcheck for Leapcell
+@app.get("/")
+async def root():
+    return {"status": "ok"}
 
 
-# Global error handler
-@router.error()
-async def error_handler(event: types.ErrorEvent):
-
-    loggers.event.exception(
-        "Critical error caused by %s",
-        event.exception
-    )
+@app.get("/kaithhealthcheck")
+async def healthcheck():
+    return {"status": "healthy"}
 
 
-# Cancel button
-@router.callback_query(F.data == "Cancel")
-async def cancel_handler(
-    call: types.CallbackQuery,
-    state: FSMContext
-):
-
-    await state.clear()
-
-    await call.message.delete()
-
-    await call.answer()
+@app.get("/kaithheathcheck")
+async def healthcheck_typo():
+    return {"status": "healthy"}
 
 
-# Telegram webhook
+# telegram webhook
 @app.post(WEBHOOK_PATH)
 async def telegram_webhook(request: Request):
+    data = await request.json()
 
-    try:
-        update_data = await request.json()
+    update = Update.model_validate(data)
 
-        update = Update.model_validate(
-            update_data,
-            context={"bot": bot}
-        )
+    await dp.feed_update(bot, update)
 
-        await dp.feed_update(bot, update)
+    return {"ok": True}
 
-    except Exception as e:
 
-        logging.exception(e)
+# =========================
+# LOCAL RUN
+# =========================
 
-        return Response(
-            status_code=500,
-            content="error"
-        )
+if __name__ == "__main__":
+    import uvicorn
 
-    return Response(
-        status_code=200,
-        content="ok"
+    uvicorn.run(
+        "main:app",
+        host=HOST,
+        port=PORT,
+        reload=False,
     )
